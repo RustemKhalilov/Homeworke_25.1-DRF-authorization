@@ -1,11 +1,11 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView, DestroyAPIView
 from rest_framework.permissions import AllowAny
 
-from users.models import Payments, User
-from users.serializers import PaymentsSerializer, UserSerializer
+from users.models import Payments, User, Subscriptions
+from users.serializers import PaymentsSerializer, UserSerializer, SubscriptionsSerializer
 
 
 class PaymentsListAPIView(generics.ListAPIView):
@@ -31,3 +31,15 @@ class UserCreateAPIView(CreateAPIView):
         user = serializer.save(is_active=True)
         user.set_password(user.password)
         user.save()
+
+
+class SubscriptionsCreateAPIView(CreateAPIView):
+    queryset = Subscriptions.objects.all()
+    serializer_class = SubscriptionsSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class SubscriptionsDestroyAPIView(DestroyAPIView):
+    queryset = Subscriptions.objects.all()

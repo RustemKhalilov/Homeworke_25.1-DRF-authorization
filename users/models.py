@@ -58,3 +58,16 @@ class Payments(models.Model):
 
     def __str__(self):
         return f'{self.user} - {self.paid_course if self.paid_course else self.paid_lesson}'
+
+
+class Subscriptions(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, **NULLABLE, related_name="subscriber")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="subscribed_course")
+    last_date = models.DateTimeField(auto_now_add=True, verbose_name="Дата начала подписки")
+
+    class Meta:
+        verbose_name = "подписка"
+        verbose_name_plural = "подписки"
+
+    def __str__(self):
+        return f"{self.user} - {self.course}"

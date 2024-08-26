@@ -3,6 +3,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView, UpdateAPIView, DestroyAPIView
 
 from lms.models import Lesson, Course
+from lms.paginations import CustomPagination
 from lms.serializers import CourseSerializer, LessonSerializer, CourseDetailSerializer
 from users.permissions import IsModer, IsOwner
 
@@ -15,6 +16,7 @@ class CourseViewSet(ModelViewSet):
     """
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+    pagination_class = CustomPagination
 
     # Чтобы выводить нужный серриалайзер нужно переопределить метод
     def get_serializer_class(self):
@@ -47,7 +49,6 @@ class LessonCreateApiView(CreateAPIView):
     serializer_class = LessonSerializer
     permission_classes = (~IsModer, IsAuthenticated)
 
-
     def perform_create(self, serializer):
         lesson = serializer.save()
         lesson.owner = self.request.user
@@ -57,7 +58,7 @@ class LessonCreateApiView(CreateAPIView):
 class LessonListApiView(ListAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
-
+    pagination_class = CustomPagination
 
 
 class LessonRetriveApiView(RetrieveAPIView):
@@ -70,6 +71,7 @@ class LessonUpdateApiView(UpdateAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     permission_classes = (IsAuthenticated, IsModer | IsOwner)
+
 
 class LessonDestroyApiView(UpdateAPIView):
     queryset = Lesson.objects.all()

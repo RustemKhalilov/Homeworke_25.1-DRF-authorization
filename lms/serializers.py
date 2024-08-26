@@ -1,14 +1,18 @@
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
-
 from lms.models import Lesson, Course
+from lms.validators import YoutubeValidators
 
 
 class CourseSerializer(ModelSerializer):
+
     class Meta:
         model = Course
         fields = "__all__"
 
+
 class LessonSerializer(ModelSerializer):
+    validators = [YoutubeValidators(field='lesson_url')]
+
     class Meta:
         model = Lesson
         fields = "__all__"
@@ -23,8 +27,10 @@ class CourseDetailSerializer(ModelSerializer):
     lesson_count = SerializerMethodField()
 
     lessons = SerializerMethodField()
+
     def get_course_count(t1, t2):
         return Course.objects.all().count()
+
     """
     Почему нужен второй парамет, потому что структура следующая
     в name вернется словарь Course:<Coures:.......>
@@ -42,6 +48,7 @@ class CourseDetailSerializer(ModelSerializer):
     <Course: Проектирование месторождений газа нефти: Курс рассматривает базовые принципы проектирования месторождений нефти и газа>
     В общем возвращаются сложные объекты, которые можно рассмотреть на точке останова, ключающих много разных полей
     """
+
     def get_lesson_count(t1, t2):
         return Lesson.objects.all().filter(course=t2).count()
 
@@ -67,15 +74,15 @@ class CourseDetailSerializer(ModelSerializer):
     В общем возвращаются сложные объекты, которые можно рассмотреть на точке останова, ключающих много разных полей
 
     """
+
     def get_lessons(t1, t2):
-        my_result =list(Lesson.objects.all().filter(course=t2))
+        my_result = list(Lesson.objects.all().filter(course=t2))
         my_list = []
         for item in my_result:
             my_list.append(item.lesson_name)
         return my_list
 
-
-
     class Meta:
         model = Course
-        fields = ("name", "description", "owner", "course_count", "lessons", "lesson_count") #  , "lesson" "courses_info" После описания можно добавить сюда поле , "lesson_count"
+        fields = ("name", "description", "owner", "course_count", "lessons",
+                  "lesson_count")  # , "lesson" "courses_info" После описания можно добавить сюда поле , "lesson_count"
