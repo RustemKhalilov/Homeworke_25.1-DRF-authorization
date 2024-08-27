@@ -149,14 +149,11 @@ class LessonsTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(data.get('lesson_name'), "Группы Ассура базовых видов")
 
-    # def test_lesson_delete(self):
-    #     url = reverse("lms:lesson_delete", args=(self.lesson.pk,))
-    #     print(url)
-    #     response = self.client.delete(url)
-    #     data = response.json()
-    #     print(data)
-    #     self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-    #     self.assertEqual(Lesson.objects.all().count(), 0)
+    def test_lesson_delete(self):
+        url = reverse("lms:lesson_delete", args=(self.lesson.pk,))
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Lesson.objects.all().count(), 0)
 
     def test_lesson_list(self):
         url = reverse("lms:lesson_list")
