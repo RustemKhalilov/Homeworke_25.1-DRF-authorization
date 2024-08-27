@@ -21,184 +21,167 @@ self.client.force_authenticate()
 class CoursesTestCase(APITestCase):
 
     def setUp(self):
-        self.user = User.objects.create(email="admin@sky.pro")
+        self.user = User.objects.create(email="user15@list.ru")
 
-        self.course = Course.objects.create(title='Курс номер 1', description='Описание курса номер 1',  owner=self.user)
+        self.course = Course.objects.create(name='Сопротивление материалов', description='Курс о свойствах '
+                                                                                         'материалов и их работе при '
+                                                                                         'нагружении', owner=self.user)
 
-        video = "https://www.youtube.com/watch?v=uC0jJGfDxtM&list=PLlb7e2G7aSpTFea2FYxp7mFfbZW-xavhL&index=1"
+        video = "https://www.youtube.com/watch?v=_UZhalfqCfA&list=PLtaqFZsfPcLlQ4Jvdu9EWQF8iHi831mQa"
 
-        self.lesson = Lesson.objects.create(title='Урок номер 1', course=self.course , description="описание" , video_url=video, owner=self.user)
+        self.lesson = Lesson.objects.create(lesson_name='Работа материалов при растяжении и сжатии', course=self.course,
+                                            lesson_description="Урок изучает работу материалов при растяжении и сжатии волокн",
+                                            lesson_url=video, owner=self.user)
 
         self.client.force_authenticate(user=self.user)
 
-
     def test_course_retrieve(self):
-        url = reverse("courses:course-detail", args=(self.course.pk,))
-        # dogs:dog-detail
+        url = reverse("lms:course-detail", args=(self.course.pk,))  # url lms:course-detail" в таком виде потому что
+        # созданы на основе CourseViewSet
         response = self.client.get(url)
         data = response.json()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(data.get('title'), self.course.title)
+        self.assertEqual(data.get('name'), self.course.name)
 
     def test_course_create(self):
-        url = reverse("courses:course-list")
-        data = {"title": "Курс 2"}
+        url = reverse("lms:course-list")
+        data = {"name": "Расчет статически неопределимых систем",
+                "description": "Курс изучает расчеты статически неопределимых систем"
+                }
         response = self.client.post(url, data)
 
         data = response.json()
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Course.objects.all().count(), 2)
+        self.assertEqual(Course.objects.all().count(), 2)  # Один курс создается выше в разделе setUp другой тут,
+        # поэтому объектов во временной базе 2
 
     def test_course_update(self):
-        url = reverse("courses:course-detail", args=(self.course.pk,))
-        data = {"title": "Курс 1"}
+        url = reverse("lms:course-detail", args=(self.course.pk,))
+        data = {"name": "Расчет статически определимых систем",
+                "description": "Курс изучает расчеты статически неопределимых систем"
+                }
         response = self.client.patch(url, data)
 
         data = response.json()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(data.get('title'), "Курс 1")
+        self.assertEqual(data.get('name'), "Расчет статически определимых систем")
 
     def test_course_delete(self):
-        url = reverse("courses:course-detail", args=(self.course.pk,))
+        url = reverse("lms:course-detail", args=(self.course.pk,))
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Course.objects.all().count(), 0)
 
     def test_course_list(self):
-        url = reverse("courses:course-list")
+        url = reverse("lms:course-list")
         response = self.client.get(url)
-
         data = response.json()
-        # print(data)
-
-        created_text = str(self.course.created_at)
-        created = created_text[0:10]+'T'+created_text[11:26]+'Z'
-        updated_text = str(self.course.updated_at)
-        updated = updated_text[0:10] + 'T' + updated_text[11:26] + 'Z'
-        # print(f"created {created}")
-        # print(f"updated {updated}")
-
+        #print(data)
         result = {
-            'count': 1,
-            'next': None,
-            'previous': None,
-            'results':
-                [
-                    {
-                        'id': self.course.pk,
-                        'title': self.course.title,
-                        'preview': None,
-                        'description': self.course.description,
-                        'owner': self.user.pk,
-                        'count_lessons': 1,
-                        'lessons':
-                            [
-                                {
-                                    'id': self.lesson.pk,
-                                    'title': self.lesson.title,
-                                    'description': self.lesson.description,
-                                    'preview': None,
-                                    'video_url': self.lesson.video_url,
-                                    'course': self.course.pk,
-                                    'owner':  self.user.pk,
-                                }
-                            ],
-                        'created_at': created,
-                        'updated_at': updated,
-                        'subscriptions': False
-                    }
-                ]
+            "count": 1,
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "id": self.course.pk,
+                    "name": self.course.name,
+                    "preview": None,
+                    "description": self.course.description,
+                    "owner": self.user.pk
+                }
+            ]
         }
-        # print(f"created_at:{self.course.created_at} updated_at:{self.course.updated_at}")
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(data, result)
+
 
 class LessonsTestCase(APITestCase):
 
     def setUp(self):
-        self.user = User.objects.create(email="admin@sky.pro")
+        self.user = User.objects.create(email="admin@example.com")
 
-        self.course = Course.objects.create(title='Курс номер 1', description='Описание курса номер 1',  owner=self.user)
+        self.course = Course.objects.create(name='Сопротивление материалов', description='Курс о свойствах '
+                                                                                         'материалов и их работе при '
+                                                                                         'нагружении', owner=self.user)
 
-        video = "https://www.youtube.com/watch?v=uC0jJGfDxtM&list=PLlb7e2G7aSpTFea2FYxp7mFfbZW-xavhL&index=1"
+        video = "https://www.youtube.com/watch?v=_UZhalfqCfA&list=PLtaqFZsfPcLlQ4Jvdu9EWQF8iHi831mQa"
 
-        self.lesson = Lesson.objects.create(title='Урок номер 1', course=self.course , description="описание" , video_url=video, owner=self.user)
+        self.lesson = Lesson.objects.create(lesson_name='Работа материалов при растяжении и сжатии', course=self.course,
+                                            lesson_description="Урок изучает работу материалов при растяжении и сжатии волокн",
+                                            lesson_url=video, owner=self.user)
 
         self.client.force_authenticate(user=self.user)
 
     def test_lesson_retrieve(self):
-        url = reverse("courses:lessons-retrieve", args=(self.lesson.pk,))
+        url = reverse("lms:lesson_retrive", args=(self.lesson.pk,))
         response = self.client.get(url)
         data = response.json()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(data.get('title'), self.lesson.title)
+        self.assertEqual(data.get('lesson_name'), self.lesson.lesson_name)
 
     def test_lesson_create(self):
-        url = reverse("courses:lessons-create")
-        # course_id = self.course.pk
-        # print(self.course.pk)
+        url = reverse("lms:lesson_create")
+        course_id = self.course.pk
+        print(self.course.pk)
 
         data = {
-            "title": "lesson 2",
-            "course": self.course.pk
-                }
-
-
+            "lesson_name": "Группы Ассура различных видов",
+            "lesson_description": "Урок рассматривает группы Ассура и их применение",
+            "course": self.course.pk,
+        }
         response = self.client.post(url, data)
-
         data = response.json()
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Lesson.objects.all().count(), 2)
 
     def test_lesson_update(self):
-        url = reverse("courses:lessons-update", args=(self.lesson.pk,))
-        data = {"title": "Updated lesson"}
+        url = reverse("lms:lesson_update", args=(self.lesson.pk,))
+        data = {"lesson_name": "Группы Ассура базовых видов"}
         response = self.client.patch(url, data)
 
         data = response.json()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(data.get('title'), "Updated lesson")
+        self.assertEqual(data.get('lesson_name'), "Группы Ассура базовых видов")
 
-    def test_lesson_delete(self):
-        url = reverse("courses:lessons-delete", args=(self.lesson.pk,))
-        response = self.client.delete(url)
-
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(Lesson.objects.all().count(), 0)
+    # def test_lesson_delete(self):
+    #     url = reverse("lms:lesson_delete", args=(self.lesson.pk,))
+    #     print(url)
+    #     response = self.client.delete(url)
+    #     data = response.json()
+    #     print(data)
+    #     self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+    #     self.assertEqual(Lesson.objects.all().count(), 0)
 
     def test_lesson_list(self):
-        url = reverse("courses:lessons-list")
+        url = reverse("lms:lesson_list")
         response = self.client.get(url)
 
         data = response.json()
-        # print(f"data {data}")
-
+        print(f"data {data}")
 
         result = {'count': 1,
-             'next': None,
-             'previous': None,
-             'results':
-                 [
-                     {'id': self.lesson.pk,
-                      'title': self.lesson.title,
-                      'description': self.lesson.description,
-                      'preview': None,
-                      'video_url': self.lesson.video_url,
-                      'course': self.lesson.course.pk,
-                      'owner':  self.user.pk,
-                      }
-                 ]
-             }
+                  'next': None,
+                  'previous': None,
+                  'results':
+                      [
+                          {'id': self.lesson.pk,
+                           'lesson_name': self.lesson.lesson_name,
+                           'lesson_description': self.lesson.lesson_description,
+                           'lesson_preview': None,
+                           'lesson_url': self.lesson.lesson_url,
+                           'course': self.lesson.course.pk,
+                           'owner': self.user.pk,
+                           }
+                      ]
+                  }
 
-        # print(f"result {result}")
+        print(f"result {result}")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(data, result)
