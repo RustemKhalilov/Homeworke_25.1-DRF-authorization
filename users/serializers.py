@@ -1,6 +1,6 @@
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
-
+from rest_framework.exceptions import ValidationError
 from users.models import User, Payments, Subscriptions
 
 
