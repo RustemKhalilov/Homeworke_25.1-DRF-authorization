@@ -1,3 +1,7 @@
+import pytz
+from datetime import datetime, timedelta
+from django.shortcuts import get_object_or_404
+from config import settings
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView, UpdateAPIView, DestroyAPIView
@@ -6,6 +10,7 @@ from lms.models import Lesson, Course
 from lms.paginations import CustomPagination
 from lms.serializers import CourseSerializer, LessonSerializer, CourseDetailSerializer
 from users.permissions import IsModer, IsOwner
+from lms.tasks import send_information_about_course_update
 
 
 class CourseViewSet(ModelViewSet):
@@ -52,6 +57,14 @@ class LessonCreateApiView(CreateAPIView):
     def perform_create(self, serializer):
         lesson = serializer.save()
         lesson.owner = self.request.user
+        zone = pytz.timezone(settings.TIME_ZONE)
+        current_datetime_4_hours_ago = datetime.now(zone) - timedelta(minutes=1)# timedelta(hours=4)
+
+        course = get_object_or_404(Course, pk=lesson.course.pk)
+
+        if lesson.course.updated_at < current_datetime_4_hours_ago:
+            send_information_about_course_update.delay(course.pk)
+
         lesson.save(())
 
 
